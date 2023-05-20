@@ -6,6 +6,11 @@ const web3 = new Web3('https://bsc-dataseed.binance.org/');
 // The address you want to check the balance of ETH
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 
+//min amount of ETH to redeem
+let minAmount = 0.02
+let ethReducedDecimals
+let fethReducedDecimals
+
 // The contract fETH address of the token you want to check = ETH
 const ethAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 
@@ -37,21 +42,6 @@ const ethABI = [
 
 // Create a contract instance using the token address and ABI
 const ethContract = new web3.eth.Contract(ethABI, ethAddress);
-
-// Function to check the token balance
-const checkTokenBalance = async () => {
-  try {
-    // Get the token balance
-    const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
-
-    // Print the token balance
-    console.log(`Contract ETH Balance: ${ethBalance}`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-};
-
-//CHECK THE fETH BALANCE ON USERS WALLET
 
 // The address you want to check the balance of fETH
 const userAddress = '0xa94e7307d9efb0d11adf07ba2ed122b303e2c77e';
@@ -110,20 +100,42 @@ const fethABI = [
 const fethContract = new web3.eth.Contract(fethABI, fethAddress);
 
 // Function to check the token balance
-const checkfETHBalance = async () => {
+const checkTokenBalance = async () => {
   try {
     // Get the token balance
     const fethBalance = await fethContract.methods.balanceOf(userAddress).call();
+    const fethReducedDecimals = fethBalance/10**8;
 
     // Print the token balance
-    console.log(`Wallet fETH Balance: ${fethBalance}`);
+    console.log(`Wallet fETH Balance: ${fethReducedDecimals}`);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('fETH Error:', error);
   }
+    try {  
+     // Get the token balance and reduce decimals
+     const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
+     const ethReducedDecimals = ethBalance/10**18;
+
+     // Print the token balance
+     console.log(`Contract ETH Balance: ${ethReducedDecimals}`);
+   } catch (error) {
+     console.error('ETH Error:', error);
+  }
+
+  console.log(minAmount)
+
+  // Check your balances condicitions condition here
+  if (ethReducedDecimals >= minAmount) {
+  //clearInterval(intervalId);
+  console.log(`Ready to redeemUnderlying`)
+  //redeemUnderFunction (ethReducedDecimals, fethReducedDecimals);
+  } 
+  else {
+  console.log(`Keep Cheking`)
+}
 };
 
-// Set a 1-second interval to check the token and BNB balances continuously
+// Set a 1-second interval to check ETH and fETH Balances
 setInterval(async () => {
   await checkTokenBalance();
-  await checkfETHBalance()
 }, 1000);
