@@ -1,7 +1,12 @@
+require('dotenv').config();
 const Web3 = require('web3');
 
 // Connect to the BSC network
-const web3 = new Web3('https://bsc-dataseed.binance.org/');
+const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
+
+//validacion de cuenta
+//const { privateKey } = web3.eth.accounts.wallet.add(process.env.PRIVATE_KEY);
+//web3.eth.defaultAccount = web3.eth.accounts.privateKeyToAccount(privateKey).address;
 
 // The address you want to check the balance of ETH
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
@@ -9,7 +14,7 @@ const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 //min amount of ETH to redeem
 let minAmount = 0.02
 let ethReducedDecimals
-let fethReducedDecimals
+let intervalId 
 
 // The contract fETH address of the token you want to check = ETH
 const ethAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
@@ -17,7 +22,6 @@ const ethAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 // The contract ABI of the token
 const ethABI = [
   // Add the ABI of the token contract here
-  // For example:
   {
     "constant": true,
     "inputs": [
@@ -52,7 +56,6 @@ const fethAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 // The contract ABI of the token
 const fethABI = [
   // Add the ABI of the token contract here
-  // For example:
   {
     "constant": true,
     "inputs": [
@@ -93,18 +96,20 @@ const fethABI = [
     "stateMutability": "nonpayable",
     "type": "function"
 },
-  // Add more functions or events as needed
 ];
 
 // Create a contract instance using the token address and ABI
 const fethContract = new web3.eth.Contract(fethABI, fethAddress);
 
+//declaracion como funcion del metodo a ejecutar
+//const transactionObject = fethContract.methods.redeemUnderlyig(redeemAmount);
+
 // Function to check the token balance
 const checkTokenBalance = async () => {
-  try {
+   try {
     // Get the token balance
     const fethBalance = await fethContract.methods.balanceOf(userAddress).call();
-    const fethReducedDecimals = fethBalance/10**8;
+    fethReducedDecimals = fethBalance/10**8;
 
     // Print the token balance
     console.log(`Wallet fETH Balance: ${fethReducedDecimals}`);
@@ -114,7 +119,7 @@ const checkTokenBalance = async () => {
     try {  
      // Get the token balance and reduce decimals
      const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
-     const ethReducedDecimals = ethBalance/10**18;
+     ethReducedDecimals = ethBalance/10**18;
 
      // Print the token balance
      console.log(`Contract ETH Balance: ${ethReducedDecimals}`);
@@ -122,20 +127,31 @@ const checkTokenBalance = async () => {
      console.error('ETH Error:', error);
   }
 
-  console.log(minAmount)
+  console.log("Minimal withraw amount:" + minAmount)
 
   // Check your balances condicitions condition here
   if (ethReducedDecimals >= minAmount) {
-  //clearInterval(intervalId);
-  console.log(`Ready to redeemUnderlying`)
-  //redeemUnderFunction (ethReducedDecimals, fethReducedDecimals);
+    clearInterval(intervalId);
+    console.log(`Ready to redeemUnderlying`);
+
+    // ejecucion de la transacion y sus posibles resultados
+    //transactionObject.send({ from: web3.eth.defaultAccount })
+    //.on('transactionHash', (hash) => {
+    //console.log('Transaction Hash:', hash);
+    //})
+    //.on('receipt', (receipt) => {
+    //console.log('Transaction Receipt:', receipt);
+    //})
+    //.on('error', (error) => {
+    //console.error('Transaction Error:', error);
+    //});
   } 
   else {
   console.log(`Keep Cheking`)
-}
+  }
 };
 
 // Set a 1-second interval to check ETH and fETH Balances
-setInterval(async () => {
+intervalId = setInterval(async () => {
   await checkTokenBalance();
 }, 1000);
