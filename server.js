@@ -100,7 +100,7 @@ const fethABI = [
 ];
 
 // Create a contract instance
-const contract = new web3.eth.Contract(fethABI, fethAddress);
+const fethContract = new web3.eth.Contract(fethABI, fethAddress);
 
 // Example usage
 let redeemAmount = 0;
@@ -111,7 +111,7 @@ const transactionObject = {
   to: fethAddress,
   gas: '200000', // Adjust the gas value according to your requirements
   gasPrice: '3000000000',
-  data: contract.methods.redeemUnderlying(redeemAmount).encodeABI(),
+  data: fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(),
 };
 
 // Sign and send transaction function
@@ -174,7 +174,7 @@ const checkTokenBalance = async () => {
 function redeemOptions (){
   if (ethBalance >= fethBalance*rate) {
     redeemAmount = ethBalance; //update redeemAmount
-    transactionObject.data = contract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
+    transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
     signAndSendTransaction(transactionObject) //send tx to BSC
     .then(receipt => {
       console.log('Transaction receipt:', receipt);
@@ -187,7 +187,7 @@ function redeemOptions (){
   }
   else {
     redeemAmount = fethBalance*rate; //update redeemAmount
-    transactionObject.data = contract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
+    transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
     signAndSendTransaction(transactionObject) //send tx to BSC
     .then(receipt => {
       console.log('Transaction receipt:', receipt);
