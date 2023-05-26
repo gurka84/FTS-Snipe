@@ -15,6 +15,7 @@ const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 let minAmount = 0.02
 let ethReducedDecimals
 let intervalId 
+const rate = 274883996
 
 // The contract fETH address of the token you want to check = ETH
 const ethAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
@@ -98,15 +99,44 @@ const fethABI = [
 },
 ];
 
-// Create a contract instance using the token address and ABI
-const fethContract = new web3.eth.Contract(fethABI, fethAddress);
+// Create a contract instance
+const contract = new web3.eth.Contract(fethABI, fethAddress);
 
-//declaracion como funcion del metodo a ejecutar
-//const transactionObject = fethContract.methods.redeemUnderlyig(redeemAmount);
+// Example usage
+let redeemAmount = 0;
+
+// Prepare the transaction object
+const transactionObject = {
+  from: '0xa94e7307d9efb0d11adf07ba2ed122b303e2c77e', // Your wallet address
+  to: fethAddress,
+  gas: '200000', // Adjust the gas value according to your requirements
+  gasPrice: '3000000000',
+  data: contract.methods.redeemUnderlying(redeemAmount).encodeABI(),
+};
+
+// Sign and send transaction function
+
+const signAndSendTransaction = (transactionObject) => {
+  return new Promise((resolve, reject) => {
+    web3.eth.accounts.signTransaction(transactionObject, process.env.PRIVATE_KEY)
+      .then(signedTx => {
+        web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+          .on('receipt', receipt => {
+            resolve(receipt); // Resolve the promise with the transaction receipt
+          })
+          .on('error', error => {
+            reject(error); // Reject the promise with the transaction error
+          });
+      })
+      .catch(error => {
+        reject(error); // Reject the promise with the signing error
+      });
+  });
+};
 
 // Function to check the token balance
 const checkTokenBalance = async () => {
-   try {
+  try {
     // Get the token balance
     const fethBalance = await fethContract.methods.balanceOf(userAddress).call();
     fethReducedDecimals = fethBalance/10**8;
@@ -116,40 +146,61 @@ const checkTokenBalance = async () => {
   } catch (error) {
     console.error('fETH Error:', error);
   }
-    try {  
-     // Get the token balance and reduce decimals
-     const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
-     ethReducedDecimals = ethBalance/10**18;
+  try {  
+    // Get the token balance and reduce decimals
+    const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
+    ethReducedDecimals = ethBalance/10**18;
 
-     // Print the token balance
-     console.log(`Contract ETH Balance: ${ethReducedDecimals}`);
-   } catch (error) {
-     console.error('ETH Error:', error);
+    // Print the token balance
+    console.log(`Contract ETH Balance: ${ethReducedDecimals}`);
+  } catch (error) {
+    console.error('ETH Error:', error);
   }
 
   console.log("Minimal withraw amount:" + minAmount)
 
-  // Check your balances condicitions condition here
+  // Check execution balance 
   if (ethReducedDecimals >= minAmount) {
     clearInterval(intervalId);
     console.log(`Ready to redeemUnderlying`);
-
-    // ejecucion de la transacion y sus posibles resultados
-    //transactionObject.send({ from: web3.eth.defaultAccount })
-    //.on('transactionHash', (hash) => {
-    //console.log('Transaction Hash:', hash);
-    //})
-    //.on('receipt', (receipt) => {
-    //console.log('Transaction Receipt:', receipt);
-    //})
-    //.on('error', (error) => {
-    //console.error('Transaction Error:', error);
-    //});
-  } 
+    redeemOptions()
+      } 
   else {
   console.log(`Keep Cheking`)
   }
 };
+
+ // Check balance condicitions
+function redeemOptions (){
+  if (ethBalance >= fethBalance*rate) {
+    redeemAmount = ethBalance; //update redeemAmount
+    transactionObject.data = contract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
+    signAndSendTransaction(transactionObject) //send tx to BSC
+    .then(receipt => {
+      console.log('Transaction receipt:', receipt);
+      // Transaction was successful, handle the response here
+    })
+    .catch(error => {
+      console.error('Transaction error:', error);
+      // Transaction failed, handle the error here
+    });
+  }
+  else {
+    redeemAmount = fethBalance*rate; //update redeemAmount
+    transactionObject.data = contract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
+    signAndSendTransaction(transactionObject) //send tx to BSC
+    .then(receipt => {
+      console.log('Transaction receipt:', receipt);
+      // Transaction was successful, handle the response here
+    })
+    .catch(error => {
+      console.error('Transaction error:', error);
+      // Transaction failed, handle the error here
+    });
+  }
+
+}
+
 
 // Set a 1-second interval to check ETH and fETH Balances
 intervalId = setInterval(async () => {
