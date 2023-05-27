@@ -1,12 +1,9 @@
 require('dotenv').config();
+const { default: BigNumber } = require('bignumber.js');
 const Web3 = require('web3');
 
 // Connect to the BSC network
 const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
-
-//validacion de cuenta
-//const { privateKey } = web3.eth.accounts.wallet.add(process.env.PRIVATE_KEY);
-//web3.eth.defaultAccount = web3.eth.accounts.privateKeyToAccount(privateKey).address;
 
 // The address you want to check the balance of ETH
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
@@ -15,6 +12,8 @@ const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 let minAmount = 0.02
 let ethReducedDecimals
 let intervalId 
+let ethBalance
+let fethBalance
 const rate = 274883996
 
 // The contract fETH address of the token you want to check = ETH
@@ -103,7 +102,7 @@ const fethABI = [
 const fethContract = new web3.eth.Contract(fethABI, fethAddress);
 
 // Example usage
-let redeemAmount = 0;
+let redeemAmount = new BigNumber(0);
 
 // Prepare the transaction object
 const transactionObject = {
@@ -138,9 +137,8 @@ const signAndSendTransaction = (transactionObject) => {
 const checkTokenBalance = async () => {
   try {
     // Get the token balance
-    const fethBalance = await fethContract.methods.balanceOf(userAddress).call();
-    fethReducedDecimals = fethBalance/10**8;
-
+    fethBalance = new BigNumber(await fethContract.methods.balanceOf(userAddress).call());
+    fethReducedDecimals = fethBalance.dividedBy(new BigNumber(10).exponentiatedBy(8));
     // Print the token balance
     console.log(`Wallet fETH Balance: ${fethReducedDecimals}`);
   } catch (error) {
@@ -148,8 +146,8 @@ const checkTokenBalance = async () => {
   }
   try {  
     // Get the token balance and reduce decimals
-    const ethBalance = await ethContract.methods.balanceOf(contractAddress).call();
-    ethReducedDecimals = ethBalance/10**18;
+    ethBalance = new BigNumber(await ethContract.methods.balanceOf(contractAddress).call());
+    ethReducedDecimals = ethBalance.dividedBy(new BigNumber(10).exponentiatedBy(18));
 
     // Print the token balance
     console.log(`Contract ETH Balance: ${ethReducedDecimals}`);
@@ -160,7 +158,7 @@ const checkTokenBalance = async () => {
   console.log("Minimal withraw amount:" + minAmount)
 
   // Check execution balance 
-  if (ethReducedDecimals >= minAmount) {
+  if (ethReducedDecimals.isGreaterThanOrEqualTo(minAmount)) {
     clearInterval(intervalId);
     console.log(`Ready to redeemUnderlying`);
     redeemOptions()
@@ -172,33 +170,24 @@ const checkTokenBalance = async () => {
 
  // Check balance condicitions
 function redeemOptions (){
-  if (ethBalance >= fethBalance*rate) {
-    redeemAmount = ethBalance; //update redeemAmount
-    transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
-    signAndSendTransaction(transactionObject) //send tx to BSC
-    .then(receipt => {
-      console.log('Transaction receipt:', receipt);
-      // Transaction was successful, handle the response here
-    })
-    .catch(error => {
-      console.error('Transaction error:', error);
-      // Transaction failed, handle the error here
-    });
+  if (ethBalance.isGreaterThanOrEqualTo(fethBalance.multipliedBy(rate))) {
+    redeemAmount = ethBalance.toFixed(); //update redeemAmount
   }
   else {
-    redeemAmount = fethBalance*rate; //update redeemAmount
-    transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
-    signAndSendTransaction(transactionObject) //send tx to BSC
+    redeemAmount = fethBalance.multipliedBy(rate).toFixed(); //update redeemAmount
+  }
+    
+  transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
+
+  signAndSendTransaction(transactionObject) //send tx to BSC
     .then(receipt => {
-      console.log('Transaction receipt:', receipt);
-      // Transaction was successful, handle the response here
+    console.log('Transaction receipt:', receipt);
+    // Transaction was successful, handle the response here
     })
     .catch(error => {
-      console.error('Transaction error:', error);
-      // Transaction failed, handle the error here
+    console.error('Transaction error:', error);
+    // Transaction failed, handle the error here
     });
-  }
-
 }
 
 
