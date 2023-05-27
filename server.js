@@ -9,7 +9,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 
 //min amount of ETH to redeem
-let minAmount = 0.00
+let minAmount = 0.02
 let ethReducedDecimals
 let intervalId 
 let ethBalance
