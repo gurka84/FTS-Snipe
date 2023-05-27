@@ -9,7 +9,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 
 //min amount of ETH to redeem
-let minAmount = 0.02
+let minAmount = 0.00
 let ethReducedDecimals
 let intervalId 
 let ethBalance
@@ -171,10 +171,11 @@ const checkTokenBalance = async () => {
  // Check balance condicitions
 function redeemOptions (){
   if (ethBalance.isGreaterThanOrEqualTo(fethBalance.multipliedBy(rate))) {
-    redeemAmount = ethBalance.toFixed(); //update redeemAmount
+    redeemAmount = fethBalance.multipliedBy(rate).toFixed();
+     //update redeemAmount
   }
   else {
-    redeemAmount = fethBalance.multipliedBy(rate).toFixed(); //update redeemAmount
+    redeemAmount = ethBalance.toFixed();//update redeemAmount
   }
     
   transactionObject.data = fethContract.methods.redeemUnderlying(redeemAmount).encodeABI(); //update amount on transactionObject
