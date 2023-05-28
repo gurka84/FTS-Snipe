@@ -11,6 +11,7 @@ const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 //min amount of ETH to redeem
 let minAmount = 0.02
 let ethReducedDecimals
+let fethReducedDecimals
 let intervalId 
 let ethBalance
 let fethBalance
@@ -135,15 +136,9 @@ const signAndSendTransaction = (transactionObject) => {
 
 // Function to check the token balance
 const checkTokenBalance = async () => {
-  try {
-    // Get the token balance
-    fethBalance = new BigNumber(await fethContract.methods.balanceOf(userAddress).call());
-    fethReducedDecimals = fethBalance.dividedBy(new BigNumber(10).exponentiatedBy(8));
-    // Print the token balance
-    console.log(`Wallet fETH Balance: ${fethReducedDecimals}`);
-  } catch (error) {
-    console.error('fETH Error:', error);
-  }
+
+
+
   try {  
     // Get the token balance and reduce decimals
     ethBalance = new BigNumber(await ethContract.methods.balanceOf(contractAddress).call());
@@ -159,6 +154,11 @@ const checkTokenBalance = async () => {
 
   // Check execution balance 
   if (ethReducedDecimals.isGreaterThanOrEqualTo(minAmount)) {
+    // Get the token balance
+    fethBalance = new BigNumber(await fethContract.methods.balanceOf(userAddress).call());
+    fethReducedDecimals = fethBalance.dividedBy(new BigNumber(10).exponentiatedBy(8));
+    // Print the token balance
+    console.log(`Wallet fETH Balance: ${fethReducedDecimals}`);
     clearInterval(intervalId);
     console.log(`Ready to redeemUnderlying`);
     redeemOptions()
