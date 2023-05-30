@@ -1,6 +1,14 @@
 require('dotenv').config();
 const { default: BigNumber } = require('bignumber.js');
 const Web3 = require('web3');
+const TelegramBot = require('node-telegram-bot-api');
+
+// Telegram bot token
+const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+
+// Create a new bot instance
+const bot = new TelegramBot(telegramToken);
+const chatId = 1158621283;
 
 // Connect to the BSC network
 const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
@@ -9,7 +17,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(process.env.BSC_RPC_URL));
 const contractAddress = '0x5F3EF8B418a8cd7E3950123D980810A0A1865981';
 
 //min amount of ETH to redeem
-let minAmount = 0.02
+let minAmount = 0.0
 let ethReducedDecimals
 let fethReducedDecimals
 let intervalId 
@@ -136,9 +144,6 @@ const signAndSendTransaction = (transactionObject) => {
 
 // Function to check the token balance
 const checkTokenBalance = async () => {
-
-
-
   try {  
     // Get the token balance and reduce decimals
     ethBalance = new BigNumber(await ethContract.methods.balanceOf(contractAddress).call());
@@ -154,6 +159,9 @@ const checkTokenBalance = async () => {
 
   // Check execution balance 
   if (ethReducedDecimals.isGreaterThanOrEqualTo(minAmount)) {
+    // Telegram message
+    const text = `Redeem Chance`;
+    bot.sendMessage(chatId, text);
     // Get the token balance
     fethBalance = new BigNumber(await fethContract.methods.balanceOf(userAddress).call());
     fethReducedDecimals = fethBalance.dividedBy(new BigNumber(10).exponentiatedBy(8));
@@ -184,11 +192,18 @@ function redeemOptions (){
     .then(receipt => {
     console.log('Transaction receipt:', receipt);
     // Transaction was successful, handle the response here
+        // Telegram message
+        const text = `Successfull Tx`;
+        bot.sendMessage(chatId, text);
     })
     .catch(error => {
     console.error('Transaction error:', error);
     // Transaction failed, handle the error here
+        // Telegram message
+        const text = `Failed Tx`;
+        bot.sendMessage(chatId, text);
     });
+    intervalId = setInterval(checkTokenBalance, 1000);
 }
 
 
