@@ -206,11 +206,22 @@ function redeemOptions (){
     intervalId = setInterval(checkTokenBalance, 1000);
 }
 
+
+
 // Initial Telegram message
 const text = `Sniper Bot Started`;
 bot.sendMessage(chatId, text);
+
+const okMessage = async () => {
+  const text = `Sniper Bot Running`;
+bot.sendMessage(chatId, text);
+}
 
 // Set a 1-second interval to check ETH and fETH Balances
 intervalId = setInterval(async () => {
   await checkTokenBalance();
 }, 1000);
+
+intervalId = setInterval(async () => {
+  await okMessage();
+}, 28800000);
