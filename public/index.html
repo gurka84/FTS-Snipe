@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Web3 Wallet Integration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-title">Web3 Wallet Integration</div>
+    <button class="header-wallet-button">Connect Wallet</button>
+  </div>
+
+  <div class="content">
+    <form>
+      <div class="form-dropdown">
+        <label for="crypto-select">Choose:</label>
+        <select id="crypto-select">
+          <option value="fETH">fETH</option>
+          <option value="fDOT">fDOT</option>
+          <option value="fBNB">fBNB</option>
+          <option value="fADA">fADA</option>
+        </select>
+      </div>
+      <div class="balance-display">
+        Balance: <span id="balance">0</span>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
